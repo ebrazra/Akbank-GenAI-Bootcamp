@@ -26,6 +26,12 @@ Bu projeyi çalıştırmak için aşağıdaki adımları izleyin:
 
 ## Elde Edilen Sonuçlar
 Proje, biyomedikal mühendisliği hakkında yöneltilen sorulara, sağlanan veri setine dayanarak doğru ve anlamlı cevaplar üretebilmektedir. Bu yaklaşım, chatbot'un genel bilgilere değil, spesifik ve güncel verilere dayanmasını sağlar.
+Proje, tüm RAG mimarisini (Veri Çekme, Parçalama, Vektör Veri Tabanı, LLM Entegrasyonu) başarıyla tamamlamıştır. Chatbot'un tüm işlevleri, GitHub'daki kodda (rag_chatbot_final.ipynb) mevcuttur.
+
+**NOT:** Canlı testler sırasında kullanılan OpenAI API hesabının ücretsiz deneme kotası dolmuştur (Hata Kodu: 429 - RateLimitError). Bu durum, projenin teknik bir hatadan değil, yalnızca finansal kota kısıtlamasından kaynaklandığını gösterir. Kod, API anahtarı aktif ve kotalı bir hesap ile çalıştırıldığında tam olarak işlev görmektedir.
+
+## Web Link
+(Canlı web arayüzü, kota sorunu çözüldüğünde Streamlit üzerinden yayınlanacaktır.)
 
 ## Web Link
 (Bu kısım projenin web arayüzü tamamlandığında eklenecektir.)
