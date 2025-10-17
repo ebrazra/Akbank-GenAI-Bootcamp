@@ -1,0 +1,65 @@
+import streamlit as st
+import wikipedia
+from langchain.text_splitter import CharacterTextSplitter
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import Chroma
+from langchain_community.llms import OpenAI
+from langchain.chains import RetrievalQA
+import os
+import openai
+
+# API Anahtarınızı Sisteme Tanımlıyoruz.
+# NOT: Bu anahtarın aktif olması ve kotasının bulunması gerekmektedir.
+# API Anahtarını Çevre Değişkeninden Okuma (Güvenli Yöntem)
+# Projeyi çalıştırmak için bu anahtarı yerel sistem değişkenine ekleyin.
+os.environ["OPENAI_API_KEY"] = os.environ.get("OPENAI_API_KEY")
+openai.api_key = os.environ["OPENAI_API_KEY"] 
+
+st.title("🔬 Biyomedikal Mühendisliği Chatbot\'u (RAG)")
+st.caption("Veri kaynağı: Wikipedia | Model: GPT-3.5-Turbo")
+
+@st.cache_resource
+def get_vector_store():
+    # Veri Çekme ve Veri Tabanı Oluşturma
+    with st.spinner("Veri seti hazırlanıyor..."):
+        wikipedia.set_lang("en")
+        try:
+            wiki_page = wikipedia.page("Medical device", auto_suggest=False)
+            raw_text = wiki_page.content
+        except (wikipedia.exceptions.PageError, wikipedia.exceptions.DisambiguationError):
+            st.error("Wikipedia\'dan veri çekilemedi.")
+            return None
+        
+        text_splitter = CharacterTextSplitter(separator="\n\n", chunk_size=1000, chunk_overlap=200)
+        documents = text_splitter.split_text(raw_text)
+        
+        embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+        vector_store = Chroma.from_texts(
+            texts=documents, embedding=embedding_model, persist_directory="./chroma_db"
+        )
+        st.success(f"Vektör Veri Tabanı başarıyla oluşturuldu. Toplam {len(documents)} belge eklendi.")
+        return vector_store
+
+def get_qa_chain(vector_store):
+    llm = OpenAI(model_name="gpt-3.5-turbo-instruct", temperature=0)
+    qa_chain = RetrievalQA.from_chain_type(
+        llm=llm,
+        chain_type="stuff",
+        retriever=vector_store.as_retriever(k=3)
+    )
+    return qa_chain
+
+vector_store = get_vector_store()
+
+if vector_store:
+    qa_chain = get_qa_chain(vector_store)
+    user_question = st.text_input("Biyomedikal mühendisliği hakkında bir soru sorabilirsin:")
+
+    if user_question:
+        with st.spinner("Cevap aranıyor..."):
+            try:
+                response = qa_chain.run(user_question)
+                st.markdown(f"**Chatbot Cevabı:** {response}")
+            except Exception as e:
+                # Kota hatasını yakalayacak kısım
+                st.error("Sorgu hatası: API kotanız dolmuştur. Lütfen API anahtarınızı kontrol edin.")
